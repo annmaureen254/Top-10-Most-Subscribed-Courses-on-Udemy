@@ -1,0 +1,80 @@
+---
+title: "Top 10 Most Subscribed Courses on Udemy"
+author: "Wangui Ngina"
+date: "10/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setting up the Environment
+Loading of the packages to be used in the project. Our main aim is to identify the most subscribed courses on Udemy and identify the fields people are most interested in. This project will give us the insight.
+
+
+```{r cars}
+library(tidyverse)
+library(scales)
+
+```
+
+## Exploring Data
+### Part 1
+
+The data is from Kaggle. We get to learn our data more. The glimpse will let us know the number of rows and columns as well as the type of the different variables we have in our dataset.
+The head()function displays the first few row of our data set while the tail() function displays the last few rows of our dataset. The summary()function gives us the summary statistics of the dataset that we are using.
+
+```{r pressure, echo=FALSE}
+udemy_courses <- read_csv("udemy_output_All_Finance__Accounting_p1_p626.csv")
+udemy_courses
+View(udemy_courses)
+glimpse(udemy_courses)
+head(udemy_courses)
+tail(udemy_courses)
+summary(udemy_courses)
+```
+### Part 2
+Getting more insights from the data, where we identify the count of the courses that are paid for and those that are accessed without pay. This insight is also displayed using ggplot to communicate that specific information. We see that the paid courses are more than the free courses.
+```{r}
+udemy_courses %>% 
+  group_by(is_paid) %>% 
+  summarise(count = n()) %>% 
+  ggplot(mapping = aes(x = is_paid, y = count)) + 
+  geom_col(fill = "darkgreen")
+
+```
+
+### Part 3
+Identifying the rating difference since our data has 2 variables that will let us know whether there is a positive or negative rate difference.
+```{r}
+udemy_courses %>% 
+  mutate(rate_difference = avg_rating_recent - avg_rating)
+
+
+```
+## DATA VISUALIZATION
+We now identify the most subscribed courses on udemy. We first select the variables that will help us achieve that. We arrange the num_subscribers column in a descending order for us to know the most subscribed course and the number of subscribers. We rename one variable to 'price' to easily relate with the variable. We filter the dataset so that it can only have courses with more than 140,000 subscribers and later mutate so that our bars can be in a descending order. We then make use of ggplot for the visualisation of this information.
+```{r}
+udemy_courses %>% 
+  select(title, is_paid, num_subscribers, rating, num_published_lectures, price_detail__price_string) %>% 
+  arrange(desc(num_subscribers)) %>% 
+  rename(price = price_detail__price_string, Paid = is_paid) %>% 
+  filter(num_subscribers > 140000) %>% 
+  mutate(title = fct_reorder(title, num_subscribers)) %>% 
+  ggplot(mapping = aes(x = title, y = num_subscribers))+
+  geom_col(aes(fill = Paid ))+
+  geom_text(aes(label = price), position = position_dodge(width =0.9),vjust = 0.5, hjust = -0.01)+
+  coord_flip()+
+  labs(x = '',
+        y = "Number of Subscribers",
+       title = 'Top 10 most Subscribed Courses on Udemy and the Cost',
+      caption = ' Source | Kaggle,
+      prepared by @ngina_wangui.' )+
+    scale_fill_manual(values = c("red", "blue"))+
+  theme(legend.position = "bottom")+
+  scale_y_continuous(breaks = seq(0,400000,200000),labels = comma)
+plot
+
+```
+
